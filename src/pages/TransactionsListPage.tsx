@@ -4,7 +4,7 @@ import React from 'react';
 import DataTable from 'react-data-table-component';
 import { useAuth } from '../hooks/useAuth';
 import { Nubank } from '../services/Nubank';
-
+import { Formatters } from '../utils/Formatters';
 
 const TransactionsListPage = () => {
   const { state } = useAuth();
@@ -27,7 +27,7 @@ const TransactionsListPage = () => {
   }, []);
 
   if (loading) {
-    return <CircularProgress color="primary" />
+    return <CircularProgress color="primary" />;
   }
 
   return (
@@ -42,12 +42,7 @@ const TransactionsListPage = () => {
             name: 'Hora',
             sortable: true,
             selector: (row: CardTransaction) => row.time,
-            format: (row: CardTransaction) =>
-              Intl.DateTimeFormat('pt-BR', {
-                dateStyle: 'short',
-                timeStyle: 'short',
-                timeZone: 'America/Sao_Paulo',
-              }).format(new Date(row.time)),
+            format: (row: CardTransaction) => Formatters.dateWithHour(row.time),
           },
           {
             name: 'Valor (R$)',

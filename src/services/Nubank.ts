@@ -16,4 +16,8 @@ export class Nubank {
   async cardTransactions() {
     return await this.api.card.getTransactions();
   }
+
+  async cardBills() {
+    return await this.api.card.getBills({});
+  }
 }
