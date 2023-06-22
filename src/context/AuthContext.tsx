@@ -15,7 +15,10 @@ export const AuthContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [state, setState] = React.useState<unknown>();
+  const [state, setState] = React.useState<unknown>(() => {
+    const state = localStorage.getItem('authState');
+    return state ? JSON.parse(state) : undefined;
+  });
   return (
     <AuthContext.Provider value={{ state, setState }}>
       {children}

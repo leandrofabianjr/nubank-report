@@ -1,6 +1,6 @@
 import { useAuth } from './hooks/useAuth';
 import AuthPage from './pages/AuthPage';
-import ReportPage from './pages/ReportPage';
+import TransactionsListPage from './pages/TransactionsListPage';
 
 function App() {
   const { state } = useAuth();
@@ -9,7 +9,7 @@ function App() {
     <>
       <h1>Nubank Report</h1>
       {!state && <AuthPage />}
-      {state && <ReportPage />}
+      {state && <TransactionsListPage />}
     </>
   );
 }
