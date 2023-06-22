@@ -1,18 +1,22 @@
+import CircularProgress from '@mui/material/CircularProgress';
 import { CardTransaction } from 'nubank-api';
 import React from 'react';
 import DataTable from 'react-data-table-component';
 import { useAuth } from '../hooks/useAuth';
 import { Nubank } from '../services/Nubank';
 
+
 const TransactionsListPage = () => {
   const { state } = useAuth();
   const [transactions, setTransactions] = React.useState<CardTransaction[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState();
 
   const getTransactions = React.useCallback(async () => {
     try {
       const nb = new Nubank(state);
       setTransactions(await nb.cardTransactions());
+      setLoading(false);
     } catch (e: any) {
       setError(e.toString());
     }
@@ -22,13 +26,17 @@ const TransactionsListPage = () => {
     getTransactions();
   }, []);
 
+  if (loading) {
+    return <CircularProgress color="primary" />
+  }
+
   return (
     <main>
       {error && <div>{error}</div>}
       <DataTable
         title="Transações"
         pagination
-        progressPending={!transactions.length}
+        progressPending={loading}
         columns={[
           {
             name: 'Hora',
@@ -76,6 +84,7 @@ const TransactionsListPage = () => {
         ]}
         data={transactions}
         defaultSortFieldId={1}
+        defaultSortAsc={false}
       />
     </main>
   );
