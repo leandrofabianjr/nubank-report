@@ -19,6 +19,7 @@ export interface AuthState {
   access_token: string;
   _links: {
     bills_summary: Href;
+    events: Href;
   };
 }
 
@@ -59,6 +60,33 @@ export interface Bill {
   line_items?: BillLineItem[];
 }
 
+interface TransactionCharges {
+  count: number;
+  amount: number;
+}
+
+interface TransactionDetails {
+  status?: string;
+  tags?: string[];
+  lat?: number;
+  lon?: number;
+  charges?: TransactionCharges;
+  subcategory?: string;
+}
+
+export interface Transaction {
+  description: string;
+  category: string;
+  amount: number;
+  time: string;
+  source: string;
+  title: string;
+  id: string;
+  details?: TransactionDetails;
+  _links?: SelfHref;
+  href?: string;
+}
+
 interface useNubankProps {
   initLoading: boolean;
 }
@@ -66,6 +94,7 @@ interface useNubankProps {
 export const useNubank = (props?: useNubankProps) => {
   const { state, setState } = useAuth();
   const [loading, setLoading] = React.useState(props?.initLoading ?? true);
+  const [error, setError] = React.useState();
 
   const defaultHeaders = () => ({
     'Content-Type': 'application/json',
@@ -74,27 +103,37 @@ export const useNubank = (props?: useNubankProps) => {
     Authorization: `Bearer ${state?.access_token}`,
   });
 
-  const requestGet = (url: string) => {
+  const request = async (
+    method: string,
+    url: string,
+    body?: unknown,
+    headers?: object
+  ) => {
+    setLoading(true);
     return fetch(url, {
-      method: 'GET',
-      headers: defaultHeaders(),
-    }).then((res) => res.json());
-  };
-
-  const requestPost = async (url: string, body?: unknown, headers?: object) => {
-    return fetch(url, {
-      method: 'POST',
+      method,
       headers: { ...defaultHeaders(), ...headers },
       body: body ? JSON.stringify(body) : null,
-    }).then((res) => res.json());
+    })
+      .then((res) => res.json())
+      .catch((e) => {
+        console.log(e);
+        setError(e.toString());
+      })
+      .finally(() => setLoading(false));
   };
+
+  const requestGet = (url: string, headers?: object) =>
+    request('GET', url, null, headers);
+
+  const requestPost = async (url: string, body?: unknown, headers?: object) =>
+    request('POST', url, body, headers);
 
   const authWithQrCode = async (
     qrCode: string,
     cpf: string,
     password: string
   ) => {
-    setLoading(true);
     const { login } = await requestGet(DISCOVERY_URL);
     const { lift } = await requestGet(DISCOVERY_APP_URL);
 
@@ -117,23 +156,38 @@ export const useNubank = (props?: useNubankProps) => {
       }
     );
 
-    setState(authState);
-    setLoading(false);
+    if (!error) {
+      setState(authState);
+    }
   };
 
   const getBillsSummary = async (): Promise<Bill[]> => {
-    setLoading(true);
     const { bills } = await requestGet(state?._links.bills_summary.href ?? '');
-    setLoading(false);
     return bills;
   };
 
   const getBill = async (href: string): Promise<Bill> => {
-    setLoading(true);
     const { bill } = await requestGet(href);
-    setLoading(false);
     return bill;
   };
 
-  return { loading, authWithQrCode, getBillsSummary, getBill };
+  const getEvents = async (): Promise<(Transaction | any)[]> => {
+    const { events } = await requestGet(state?._links.events.href ?? '');
+    return events;
+  };
+
+  const getTransactions = async (): Promise<Transaction[]> => {
+    const events = await getEvents();
+    return events.filter((e) => e?.category == 'transaction');
+  };
+
+  return {
+    loading,
+    error,
+    authWithQrCode,
+    getBillsSummary,
+    getBill,
+    getEvents,
+    getTransactions,
+  };
 };

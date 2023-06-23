@@ -1,29 +1,15 @@
 import CircularProgress from '@mui/material/CircularProgress';
-import { CardTransaction } from 'nubank-api';
 import React from 'react';
 import DataTable from 'react-data-table-component';
-import { useAuth } from '../hooks/useAuth';
-import { Nubank } from '../services/Nubank';
+import { Transaction, useNubank } from '../hooks/useNubank';
 import { Formatters } from '../utils/Formatters';
 
 const TransactionsListPage = () => {
-  const { state } = useAuth();
-  const [transactions, setTransactions] = React.useState<CardTransaction[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState();
-
-  const getTransactions = React.useCallback(async () => {
-    try {
-      const nb = new Nubank(state);
-      setTransactions(await nb.cardTransactions());
-      setLoading(false);
-    } catch (e: any) {
-      setError(e.toString());
-    }
-  }, []);
+  const { getTransactions, loading, error } = useNubank();
+  const [transactions, setTransactions] = React.useState<Transaction[]>([]);
 
   React.useEffect(() => {
-    getTransactions();
+    getTransactions().then(setTransactions);
   }, []);
 
   if (loading) {
@@ -41,37 +27,35 @@ const TransactionsListPage = () => {
           {
             name: 'Hora',
             sortable: true,
-            selector: (row: CardTransaction) => row.time,
-            format: (row: CardTransaction) => Formatters.dateWithHour(row.time),
+            selector: (row: Transaction) => row.time,
+            format: (row: Transaction) => Formatters.dateWithHour(row.time),
           },
           {
             name: 'Valor (R$)',
             sortable: true,
-            selector: (row: CardTransaction) => row.amount,
-            format: (row: CardTransaction) =>
-              Formatters.currency(row.amount / 100),
+            selector: (row: Transaction) => row.amount,
+            format: (row: Transaction) => Formatters.currency(row.amount / 100),
             right: true,
           },
           {
             sortable: true,
             name: 'Descrição',
-            selector: (row: CardTransaction) => row.description ?? '',
+            selector: (row: Transaction) => row.description ?? '',
           },
           {
             sortable: true,
             name: 'Categoria',
-            selector: (row: CardTransaction) => row.title,
+            selector: (row: Transaction) => row.title,
           },
           {
             sortable: true,
             name: 'Subcategoria',
-            selector: (row: CardTransaction) => row.details?.subcategory ?? '',
+            selector: (row: Transaction) => row.details?.subcategory ?? '',
           },
           {
             sortable: true,
             name: 'Tags',
-            selector: (row: CardTransaction) =>
-              row.details?.tags?.join(', ') ?? '',
+            selector: (row: Transaction) => row.details?.tags?.join(', ') ?? '',
           },
         ]}
         data={transactions}

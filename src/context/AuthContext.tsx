@@ -18,11 +18,15 @@ export const AuthContextProvider = ({
 }) => {
   const [state, _setState] = React.useState<AuthState | undefined>(() => {
     const state = localStorage.getItem('authState');
-    return state ? JSON.parse(state) : undefined;
+    try {
+      return state ? JSON.parse(state) : undefined;
+    } catch {
+      return undefined;
+    }
   });
 
   const setState = (value?: AuthState) => {
-    localStorage.setItem('authState', JSON.stringify('authState'));
+    localStorage.setItem('authState', JSON.stringify(state));
     _setState(value);
   };
 

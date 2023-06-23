@@ -5,14 +5,11 @@ import { Bill, useNubank } from '../hooks/useNubank';
 import { Formatters } from '../utils/Formatters';
 
 const BillDetailsPage = ({ href }: { href: string }) => {
-  const { getBill, loading } = useNubank();
+  const { getBill, loading, error } = useNubank();
   const [bill, setBill] = React.useState<Bill>();
-  const [error, setError] = React.useState();
 
   React.useEffect(() => {
-    getBill(href)
-      .then(setBill)
-      .catch((e) => setError(e.toString()));
+    getBill(href).then(setBill);
   }, []);
 
   if (loading) {

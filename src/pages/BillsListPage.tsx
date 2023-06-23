@@ -4,28 +4,24 @@ import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import React from 'react';
 import DataTable from 'react-data-table-component';
+import { Bill, useNubank } from '../hooks/useNubank';
 import { Formatters } from '../utils/Formatters';
 import BillDetailsPage from './BillDetailsPage';
-import { Bill, useNubank } from '../hooks/useNubank';
 
 const BillsListPage = () => {
-  const { getBillsSummary, loading } = useNubank();
+  const { getBillsSummary, loading, error } = useNubank();
   const [bills, setBills] = React.useState<Bill[]>([]);
   const [selectedBillLink, setSelectedBillLink] = React.useState<
     string | undefined
   >();
-  const [error, setError] = React.useState();
 
   React.useEffect(() => {
-    getBillsSummary()
-      .then(res => setBills(res))
-      .catch((e) => setError(e.toString()));
+    getBillsSummary().then((res) => setBills(res));
   }, []);
 
   if (loading) {
     return <CircularProgress color="primary" />;
   }
-
 
   if (selectedBillLink) {
     return (
