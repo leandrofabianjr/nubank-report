@@ -7,13 +7,49 @@ const DISCOVERY_URL =
 const DISCOVERY_APP_URL =
   'https://prod-s0-webapp-proxy.nubank.com.br/api/app/discovery';
 
+export interface Href {
+  href: string;
+}
+
+export interface SelfHref {
+  self: Href;
+}
+
 export interface AuthState {
   access_token: string;
+  _links: {
+    bills_summary: Href;
+  };
+}
+
+export interface BillSummary {
+  remaining_balance?: number;
+  due_date: string;
+  close_date: string;
+  late_interest_fee?: string;
+  past_balance: number;
+  late_fee?: string;
+  effective_due_date: string;
+  total_balance: number;
+  interest_rate: string;
+  interest: number;
+  total_cumulative: number;
+  paid: number;
+  minimum_payment: number;
+  remaining_minimum_payment?: number;
+  open_date: string;
+}
+
+export interface Bill {
+  id?: string;
+  state: 'overdue' | 'open' | 'future' | 'closed';
+  summary: BillSummary;
+  _links: SelfHref;
 }
 
 export const useNubank = () => {
   const { state, setState } = useAuth();
-  const [loading, setLoading] = React.useState();
+  const [loading, setLoading] = React.useState(false);
 
   const defaultHeaders = () => ({
     'Content-Type': 'application/json',
@@ -29,11 +65,11 @@ export const useNubank = () => {
     }).then((res) => res.json());
   };
 
-  const requestPost = async (url: string, body: unknown, headers?: object) => {
+  const requestPost = async (url: string, body?: unknown, headers?: object) => {
     return fetch(url, {
       method: 'POST',
       headers: { ...defaultHeaders(), ...headers },
-      body: JSON.stringify(body),
+      body: body ? JSON.stringify(body) : null,
     }).then((res) => res.json());
   };
 
@@ -42,6 +78,7 @@ export const useNubank = () => {
     cpf: string,
     password: string
   ) => {
+    setLoading(true);
     const { login } = await requestGet(DISCOVERY_URL);
     const { lift } = await requestGet(DISCOVERY_APP_URL);
 
@@ -65,7 +102,15 @@ export const useNubank = () => {
     );
 
     setState(authState);
+    setLoading(false);
   };
 
-  return { authWithQrCode };
+  const getBillsSummary = async (): Promise<Bill[]> => {
+    setLoading(true);
+    const { bills } = await requestGet(state?._links.bills_summary.href ?? '');
+    setLoading(false);
+    return bills;
+  };
+
+  return { loading, authWithQrCode, getBillsSummary };
 };

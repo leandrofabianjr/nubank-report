@@ -13,14 +13,13 @@ function App() {
 
   return (
     <>
-    <h1>Ok</h1>
-      {/* <BrowserRouter>
+      <BrowserRouter>
         <Routes>
           <Route index element={<Navigate to='bills' />} />
           <Route path="bills" element={<BillsListPage />} />
           <Route path="transactions" element={<TransactionsListPage />} />
         </Routes>
-      </BrowserRouter> */}
+      </BrowserRouter>
     </>
   );
 }

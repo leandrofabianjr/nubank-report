@@ -2,51 +2,41 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNew from '@mui/icons-material/OpenInNew';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
-import { Bill } from 'nubank-api';
 import React from 'react';
 import DataTable from 'react-data-table-component';
-import { useAuth } from '../hooks/useAuth';
-import { Nubank } from '../services/Nubank';
 import { Formatters } from '../utils/Formatters';
 import BillDetailsPage from './BillDetailsPage';
+import { Bill, useNubank } from '../hooks/useNubank';
 
 const BillsListPage = () => {
-  const { state } = useAuth();
+  const { getBillsSummary, loading } = useNubank();
   const [bills, setBills] = React.useState<Bill[]>([]);
   const [selectedBillLink, setSelectedBillLink] = React.useState<
     string | undefined
   >();
-  const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState();
 
-  const getBills = React.useCallback(async () => {
-    try {
-      const nb = new Nubank(state);
-      setBills(await nb.cardBills());
-      setLoading(false);
-    } catch (e: any) {
-      setError(e.toString());
-    }
-  }, []);
-
   React.useEffect(() => {
-    getBills();
+    getBillsSummary()
+      .then(res => setBills(res))
+      .catch((e) => setError(e.toString()));
   }, []);
 
   if (loading) {
     return <CircularProgress color="primary" />;
   }
 
-  if (selectedBillLink) {
-    return (
-      <>
-        <IconButton onClick={() => setSelectedBillLink(undefined)}>
-          <ArrowBackIcon fontSize="inherit" color="primary" />
-        </IconButton>
-        <BillDetailsPage link={selectedBillLink} />
-      </>
-    );
-  }
+
+  // if (selectedBillLink) {
+  //   return (
+  //     <>
+  //       <IconButton onClick={() => setSelectedBillLink(undefined)}>
+  //         <ArrowBackIcon fontSize="inherit" color="primary" />
+  //       </IconButton>
+  //       <BillDetailsPage link={selectedBillLink} />
+  //     </>
+  //   );
+  // }
 
   return (
     <main>
@@ -81,7 +71,7 @@ const BillsListPage = () => {
           },
         ]}
         data={bills}
-        defaultSortFieldId={1}
+        defaultSortFieldId={0}
         defaultSortAsc={false}
       />
     </main>
