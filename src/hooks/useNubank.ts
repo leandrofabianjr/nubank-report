@@ -166,7 +166,8 @@ export const useNubank = (props?: useNubankProps) => {
     return bills;
   };
 
-  const getBill = async (href: string): Promise<Bill> => {
+  const getBill = async (b: Bill): Promise<Bill> => {
+    const href = b?._links?.self?.href;
     const { bill } = await requestGet(href);
     return bill;
   };

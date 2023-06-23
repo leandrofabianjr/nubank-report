@@ -1,9 +1,6 @@
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import OpenInNew from '@mui/icons-material/OpenInNew';
+import { Tab, Tabs } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
 import React from 'react';
-import DataTable from 'react-data-table-component';
 import { Bill, useNubank } from '../hooks/useNubank';
 import { Formatters } from '../utils/Formatters';
 import BillDetailsPage from './BillDetailsPage';
@@ -11,33 +8,44 @@ import BillDetailsPage from './BillDetailsPage';
 const BillsListPage = () => {
   const { getBillsSummary, loading, error } = useNubank();
   const [bills, setBills] = React.useState<Bill[]>([]);
-  const [selectedBillLink, setSelectedBillLink] = React.useState<
-    string | undefined
-  >();
+  const [selectedBillIndex, setSelectedBillIndex] = React.useState(0);
 
   React.useEffect(() => {
-    getBillsSummary().then((res) => setBills(res));
+    getBillsSummary().then((res) => {
+      const selectableBills = res
+        .reverse()
+        .filter((b) => b?._links?.self?.href);
+      setBills(selectableBills);
+      setSelectedBillIndex(selectableBills.findIndex((b) => b.state == 'open'));
+    });
   }, []);
 
   if (loading) {
     return <CircularProgress color="primary" />;
   }
 
-  if (selectedBillLink) {
-    return (
-      <>
-        <IconButton onClick={() => setSelectedBillLink(undefined)}>
-          <ArrowBackIcon fontSize="inherit" color="primary" />
-        </IconButton>
-        <BillDetailsPage href={selectedBillLink} />
-      </>
-    );
-  }
-
   return (
     <main>
       {error && <div>{error}</div>}
-      <DataTable
+      <Tabs
+        value={selectedBillIndex}
+        onChange={(_, index) => setSelectedBillIndex(index)}
+        variant="scrollable"
+        scrollButtons="auto"
+        aria-label="scrollable auto tabs example"
+      >
+        {bills
+          .filter((b) => b?._links?.self?.href)
+          .map((b, index) => (
+            <Tab
+              key={b.summary.close_date}
+              label={Formatters.date(b.summary.close_date)}
+              value={index}
+            />
+          ))}
+      </Tabs>
+      <BillDetailsPage bill={bills[selectedBillIndex]} />
+      {/* <DataTable
         title="Faturas"
         pagination
         progressPending={loading}
@@ -55,21 +63,22 @@ const BillsListPage = () => {
           },
           {
             button: true,
-            cell: (row: Bill) => (
-              <IconButton
-                aria-label="delete"
-                size="small"
-                onClick={() => setSelectedBillLink(row._links.self?.href)}
-              >
-                <OpenInNew fontSize="inherit" color="primary" />
-              </IconButton>
-            ),
+            cell: (row: Bill) =>
+              row._links.self?.href && (
+                <IconButton
+                  aria-label="delete"
+                  size="small"
+                  onClick={() => setSelectedBillLink(row._links.self?.href)}
+                >
+                  <OpenInNew fontSize="inherit" color="primary" />
+                </IconButton>
+              ),
           },
         ]}
         data={bills}
         defaultSortFieldId={0}
         defaultSortAsc={false}
-      />
+      /> */}
     </main>
   );
 };

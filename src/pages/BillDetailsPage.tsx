@@ -8,24 +8,21 @@ import DataTable from 'react-data-table-component';
 import { Bill, useNubank } from '../hooks/useNubank';
 import { Formatters } from '../utils/Formatters';
 
-const BillDetailsPage = ({ href }: { href: string }) => {
+const BillDetailsPage = ({ bill: _bill }: { bill: Bill }) => {
   const { getBill, loading, error } = useNubank();
   const [bill, setBill] = React.useState<Bill>();
 
   React.useEffect(() => {
-    getBill(href).then(setBill);
-  }, []);
+    getBill(_bill).then(setBill);
+  }, [_bill]);
 
   if (loading) {
     return <CircularProgress color="primary" />;
   }
 
   const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-    ...theme.typography.body2,
     padding: theme.spacing(1),
     textAlign: 'center',
-    color: theme.palette.text.secondary,
     flexGrow: 1,
   }));
 
