@@ -1,8 +1,9 @@
 import React from 'react';
+import { AuthState } from '../hooks/useNubank';
 
 interface AuthContextProps {
-  state?: unknown;
-  setState: React.Dispatch<React.SetStateAction<unknown>>;
+  state?: AuthState;
+  setState: React.Dispatch<React.SetStateAction<AuthState | undefined>>;
 }
 
 export const AuthContext = React.createContext<AuthContextProps>({
@@ -15,7 +16,7 @@ export const AuthContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [state, setState] = React.useState<unknown>(() => {
+  const [state, setState] = React.useState<AuthState | undefined>(() => {
     const state = localStorage.getItem('authState');
     return state ? JSON.parse(state) : undefined;
   });

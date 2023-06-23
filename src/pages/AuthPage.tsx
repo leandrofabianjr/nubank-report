@@ -1,11 +1,10 @@
 import QR from 'qrcode';
 import React, { FormEvent } from 'react';
 import uuid from 'react-native-uuid';
-import { useAuth } from '../hooks/useAuth';
-import { Nubank } from '../services/Nubank';
+import { useNubank } from '../hooks/useNubank';
 
 const AuthPage = () => {
-  const { setState } = useAuth();
+  const { authWithQrCode } = useNubank();
   const [cpf, setCpf] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState();
@@ -24,13 +23,11 @@ const AuthPage = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    try {
-      const nb = new Nubank();
-      setState(await nb.auth(cpf, password, authCode));
-    } catch (e: any) {
+
+    authWithQrCode(authCode, cpf, password).catch((e: any) => {
       setError(e.toString());
       console.error(e);
-    }
+    });
   };
 
   return (
