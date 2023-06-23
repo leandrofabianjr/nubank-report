@@ -1,29 +1,18 @@
 import CircularProgress from '@mui/material/CircularProgress';
-import { Bill } from 'nubank-api';
 import React from 'react';
 import DataTable from 'react-data-table-component';
-import { useAuth } from '../hooks/useAuth';
-import { Nubank } from '../services/Nubank';
+import { Bill, useNubank } from '../hooks/useNubank';
 import { Formatters } from '../utils/Formatters';
 
-const BillDetailsPage = ({ link }: { link: string }) => {
-  const { state } = useAuth();
+const BillDetailsPage = ({ href }: { href: string }) => {
+  const { getBill, loading } = useNubank();
   const [bill, setBill] = React.useState<Bill>();
-  const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState();
 
-  const getBillDetails = React.useCallback(async () => {
-    try {
-      const nb = new Nubank(state);
-      setBill(await nb.cardBillDetails(link));
-      setLoading(false);
-    } catch (e: any) {
-      setError(e.toString());
-    }
-  }, []);
-
   React.useEffect(() => {
-    getBillDetails();
+    getBill(href)
+      .then(setBill)
+      .catch((e) => setError(e.toString()));
   }, []);
 
   if (loading) {
@@ -33,6 +22,7 @@ const BillDetailsPage = ({ link }: { link: string }) => {
   return (
     <main>
       {error && <div>{error}</div>}
+      <div>{JSON.stringify(bill?.summary)}</div>
       <DataTable
         pagination
         progressPending={loading}

@@ -40,16 +40,32 @@ export interface BillSummary {
   open_date: string;
 }
 
+interface BillLineItem {
+  amount: number;
+  index?: number;
+  title: string;
+  post_date: string;
+  id: string;
+  href?: string;
+  category?: string;
+  charges?: number;
+}
+
 export interface Bill {
   id?: string;
   state: 'overdue' | 'open' | 'future' | 'closed';
   summary: BillSummary;
   _links: SelfHref;
+  line_items?: BillLineItem[];
 }
 
-export const useNubank = () => {
+interface useNubankProps {
+  initLoading: boolean;
+}
+
+export const useNubank = (props?: useNubankProps) => {
   const { state, setState } = useAuth();
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(props?.initLoading ?? true);
 
   const defaultHeaders = () => ({
     'Content-Type': 'application/json',
@@ -112,5 +128,12 @@ export const useNubank = () => {
     return bills;
   };
 
-  return { loading, authWithQrCode, getBillsSummary };
+  const getBill = async (href: string): Promise<Bill> => {
+    setLoading(true);
+    const { bill } = await requestGet(href);
+    setLoading(false);
+    return bill;
+  };
+
+  return { loading, authWithQrCode, getBillsSummary, getBill };
 };

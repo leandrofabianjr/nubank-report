@@ -27,16 +27,16 @@ const BillsListPage = () => {
   }
 
 
-  // if (selectedBillLink) {
-  //   return (
-  //     <>
-  //       <IconButton onClick={() => setSelectedBillLink(undefined)}>
-  //         <ArrowBackIcon fontSize="inherit" color="primary" />
-  //       </IconButton>
-  //       <BillDetailsPage link={selectedBillLink} />
-  //     </>
-  //   );
-  // }
+  if (selectedBillLink) {
+    return (
+      <>
+        <IconButton onClick={() => setSelectedBillLink(undefined)}>
+          <ArrowBackIcon fontSize="inherit" color="primary" />
+        </IconButton>
+        <BillDetailsPage href={selectedBillLink} />
+      </>
+    );
+  }
 
   return (
     <main>
