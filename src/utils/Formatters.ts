@@ -13,4 +13,11 @@ export class Formatters {
       timeZone: 'America/Sao_Paulo',
     }).format(new Date(date));
   }
+
+  static currency(value: number) {
+    return Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  }
 }

@@ -49,10 +49,7 @@ const TransactionsListPage = () => {
             sortable: true,
             selector: (row: CardTransaction) => row.amount,
             format: (row: CardTransaction) =>
-              Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-              }).format(row.amount / 100),
+              Formatters.currency(row.amount / 100),
             right: true,
           },
           {

@@ -18,6 +18,20 @@ export class Nubank {
   }
 
   async cardBills() {
-    return await this.api.card.getBills({});
+    return await this.api.card.getBills({
+      getFutureBillsDetails: true,
+      billsAfterDueDate: new Date(new Date().getFullYear(), 0),
+    });
+  }
+
+  async cardBillDetails(link: string) {
+    console.log(link);
+    return await this.api.card.getBillDetails({
+      _links: {
+        self: {
+          href: link,
+        },
+      },
+    } as never);
   }
 }
