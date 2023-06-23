@@ -1,4 +1,8 @@
+import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import { styled } from '@mui/material/styles';
 import React from 'react';
 import DataTable from 'react-data-table-component';
 import { Bill, useNubank } from '../hooks/useNubank';
@@ -16,11 +20,54 @@ const BillDetailsPage = ({ href }: { href: string }) => {
     return <CircularProgress color="primary" />;
   }
 
+  const Item = styled(Paper)(({ theme }) => ({
+    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+    ...theme.typography.body2,
+    padding: theme.spacing(1),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+    flexGrow: 1,
+  }));
+
+  const bs = bill?.summary;
+
   return (
     <main>
+      <h1>Detalhes da Fatura</h1>
       {error && <div>{error}</div>}
-      <div>{JSON.stringify(bill?.summary)}</div>
+      {bs && (
+        <Box>
+          <Stack
+            direction="row"
+            useFlexGap
+            justifyContent="center"
+            alignItems="center"
+            spacing={2}
+            margin={2}
+          >
+            <Item>
+              <div>
+                <b>Valor:</b>
+              </div>
+              {Formatters.currency(bs.total_balance / 100)}
+            </Item>
+            <Item>
+              <div>
+                <b>Fechamento:</b>
+              </div>
+              {Formatters.date(bs.close_date)}
+            </Item>
+            <Item>
+              <div>
+                <b>Vencimento:</b>
+              </div>
+              {Formatters.date(bs.due_date)}
+            </Item>
+          </Stack>
+        </Box>
+      )}
       <DataTable
+        title="Transações da fatura"
         pagination
         progressPending={loading}
         columns={[

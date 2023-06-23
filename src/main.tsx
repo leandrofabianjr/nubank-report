@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import { AuthContextProvider } from './context/AuthContext.tsx';
+import { CacheContextProvider } from './context/CacheContext.tsx';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <AuthContextProvider>
+    <CacheContextProvider>
       <App />
-    </AuthContextProvider>
+    </CacheContextProvider>
   </React.StrictMode>
 );

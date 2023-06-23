@@ -1,8 +1,8 @@
 import React from 'react';
-import { AuthContext } from '../context/AuthContext';
+import { CacheContext } from '../context/CacheContext';
 
 export const useAuth = () => {
-  const context = React.useContext(AuthContext);
+  const context = React.useContext(CacheContext);
 
   if (!context) {
     console.error('Contexto de autentcação não encontrado.');

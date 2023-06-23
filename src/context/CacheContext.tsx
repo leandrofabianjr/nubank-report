@@ -1,17 +1,17 @@
 import React from 'react';
 import { AuthState } from '../hooks/useNubank';
 
-interface AuthContextProps {
+interface CacheContextProps {
   state?: AuthState;
   setState: (value?: AuthState) => void;
 }
 
-export const AuthContext = React.createContext<AuthContextProps>({
+export const CacheContext = React.createContext<CacheContextProps>({
   state: undefined,
   setState: () => undefined,
 });
 
-export const AuthContextProvider = ({
+export const CacheContextProvider = ({
   children,
 }: {
   children: React.ReactNode;
@@ -26,13 +26,15 @@ export const AuthContextProvider = ({
   });
 
   const setState = (value?: AuthState) => {
-    localStorage.setItem('authState', JSON.stringify(state));
+    if (value) {
+      localStorage.setItem('authState', JSON.stringify(value));
+    }
     _setState(value);
   };
 
   return (
-    <AuthContext.Provider value={{ state, setState }}>
+    <CacheContext.Provider value={{ state, setState }}>
       {children}
-    </AuthContext.Provider>
+    </CacheContext.Provider>
   );
 };
