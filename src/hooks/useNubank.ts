@@ -139,6 +139,7 @@ export const useNubank = (props?: useNubankProps) => {
       method,
       headers: { ...defaultHeaders(), ...headers },
       body: body ? JSON.stringify(body) : null,
+      mode: 'no-cors',
     })
       .then(async (res): Promise<any> => {
         if (res.status == 429) {
