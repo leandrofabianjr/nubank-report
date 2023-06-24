@@ -125,6 +125,7 @@ export const useNubank = (props?: useNubankProps) => {
 
   const defaultHeaders = () => ({
     'Content-Type': 'application/json',
+    Accept: 'application/json',
     Authorization: `Bearer ${cache.state?.access_token}`,
   });
 
@@ -169,7 +170,9 @@ export const useNubank = (props?: useNubankProps) => {
     password: string
   ) => {
     const { login } = await requestGet(DISCOVERY_URL);
+    console.log(login);
     const { lift } = await requestGet(DISCOVERY_APP_URL);
+    console.log(lift);
 
     const { access_token } = await requestPost(login, {
       client_id: 'other.conta',
