@@ -7,14 +7,25 @@ import React from 'react';
 import DataTable from 'react-data-table-component';
 import { Bill, useNubank } from '../hooks/useNubank';
 import { Formatters } from '../utils/Formatters';
+import { Button } from '@mui/base';
 
 const BillDetailsPage = ({ bill: _bill }: { bill: Bill }) => {
-  const { getBill, loading, error } = useNubank();
+  const {
+    getBill,
+    loading,
+    error,
+    getTransactions,
+    getBillWithTransactionsDetails,
+  } = useNubank();
   const [bill, setBill] = React.useState<Bill>();
 
   React.useEffect(() => {
-    getBill(_bill).then(setBill);
+    getTransactions().then(() => getBill(_bill).then(setBill));
   }, [_bill]);
+
+  const handleGetBillWithTransactionsDetails = () => {
+    getBillWithTransactionsDetails(_bill).then(setBill);
+  };
 
   if (loading) {
     return <CircularProgress color="primary" />;
@@ -27,6 +38,15 @@ const BillDetailsPage = ({ bill: _bill }: { bill: Bill }) => {
   }));
 
   const bs = bill?.summary;
+
+  const cards: { [card: string]: number } = {};
+  bill?.line_items?.forEach((i) => {
+    const card = i.transaction?.card_last_four_digits;
+    if (card) {
+      cards[card] = cards[card] ?? 0;
+      cards[card] += i.amount;
+    }
+  });
 
   return (
     <main>
@@ -44,9 +64,14 @@ const BillDetailsPage = ({ bill: _bill }: { bill: Bill }) => {
           >
             <Item>
               <div>
-                <b>Valor:</b>
+                <b>Valores:</b>
               </div>
-              {Formatters.currency(bs.total_balance / 100)}
+              {Object.keys(cards).map((k) => (
+                <div>
+                  Cartão {k}: {Formatters.currency(cards[k] / 100)}
+                </div>
+              ))}
+              Total: {Formatters.currency(bs.total_balance / 100)}
             </Item>
             <Item>
               <div>
@@ -63,6 +88,11 @@ const BillDetailsPage = ({ bill: _bill }: { bill: Bill }) => {
           </Stack>
         </Box>
       )}
+      {!Object.keys(cards).length && (
+        <Button onClick={handleGetBillWithTransactionsDetails}>
+          Carregar detalhes das transações
+        </Button>
+      )}
       <DataTable
         title="Transações da fatura"
         pagination
@@ -78,12 +108,17 @@ const BillDetailsPage = ({ bill: _bill }: { bill: Bill }) => {
             name: 'Valor',
             sortable: true,
             selector: (row) => row?.amount,
-            format: (row) => Formatters.currency(row?.amount),
+            format: (row) => Formatters.currency(row?.amount / 100),
           },
           {
             name: 'Descrição',
             sortable: true,
             selector: (row) => row?.title,
+          },
+          {
+            name: 'Cartão',
+            sortable: true,
+            selector: (row) => row?.transaction?.card_last_four_digits ?? '',
           },
         ]}
         data={bill?.line_items ?? []}

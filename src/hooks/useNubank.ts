@@ -50,6 +50,7 @@ interface BillLineItem {
   href?: string;
   category?: string;
   charges?: number;
+  transaction?: Transaction;
 }
 
 export interface Bill {
@@ -74,33 +75,60 @@ interface TransactionDetails {
   subcategory?: string;
 }
 
+interface Tag {
+  id: string;
+  description: string;
+}
+
+interface Charge {
+  amount: number;
+  status: string;
+  index: number;
+  source: string;
+  post_date: string;
+}
+
 export interface Transaction {
   description: string;
-  category: string;
-  amount: number;
-  time: string;
-  source: string;
   title: string;
-  id: string;
   details?: TransactionDetails;
   _links?: SelfHref;
   href?: string;
+  category: string;
+  amount: number;
+  tags: Tag[];
+  card_last_four_digits: string;
+  time: string;
+  charges: number;
+  original_merchant_name: string;
+  mcc: string;
+  charges_list: Charge[];
+  source: string;
+  account: string;
+  card: string;
+  status: string;
+  id: string;
+  merchant_name: string;
+  event_type: string;
+  card_type: string;
+  country: string;
 }
 
 interface useNubankProps {
   initLoading: boolean;
 }
 
+class RequestError extends Error {}
+class TooManyRequestsError extends RequestError {}
+
 export const useNubank = (props?: useNubankProps) => {
-  const { state, setState } = useCache();
+  const cache = useCache();
   const [loading, setLoading] = React.useState(props?.initLoading ?? true);
   const [error, setError] = React.useState();
 
   const defaultHeaders = () => ({
     'Content-Type': 'application/json',
-    'User-Agent': 'nubank-api - https://github.com/fmsouza/nubank-api',
-    'X-Correlation-Id': 'WEB-APP.pewW9',
-    Authorization: `Bearer ${state?.access_token}`,
+    Authorization: `Bearer ${cache.state?.access_token}`,
   });
 
   const request = async (
@@ -115,7 +143,15 @@ export const useNubank = (props?: useNubankProps) => {
       headers: { ...defaultHeaders(), ...headers },
       body: body ? JSON.stringify(body) : null,
     })
-      .then((res) => res.json())
+      .then(async (res): Promise<any> => {
+        if (res.status == 429) {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          console.log('tentando novamente', url);
+          return await request(method, url, body, headers);
+        }
+
+        return res.json();
+      })
       .catch((e) => {
         console.log(e);
         setError(e.toString());
@@ -157,29 +193,99 @@ export const useNubank = (props?: useNubankProps) => {
     );
 
     if (!error) {
-      setState(authState);
+      cache.setState(authState);
     }
   };
 
   const getBillsSummary = async (): Promise<Bill[]> => {
-    const { bills } = await requestGet(state?._links.bills_summary.href ?? '');
+    if (cache.bills) return cache.bills;
+
+    const href = cache.state?._links.bills_summary.href ?? '';
+    const { bills }: { bills: Bill[] } = await requestGet(href);
+    bills.sort((b1, b2) =>
+      b1.summary.close_date < b2.summary.close_date ? 1 : -1
+    );
+    cache.setBills(bills);
+
     return bills;
   };
 
+  const getBillWithTransactionsDetails = async (b: Bill): Promise<Bill> => {
+    const bills = await getBillsSummary();
+
+    const cachedBillIndex = bills.findIndex(
+      (cb) => cb._links?.self?.href == b._links?.self?.href
+    );
+
+    const href = b._links?.self?.href;
+    const { bill }: { bill: Bill } = await requestGet(href);
+
+    const transactions = await getTransactions();
+
+    const items = bill.line_items ?? [];
+    for (let i = 0; i < items.length ?? 0; i++) {
+      const event = transactions.find((t) => t.href == items[i].href);
+      if (event) {
+        items[i].transaction = await getTransaction(event);
+      }
+    }
+    bill.line_items = items;
+    bills[cachedBillIndex] = bill;
+    cache.setBills(bills);
+
+    return bill;
+  };
+
   const getBill = async (b: Bill): Promise<Bill> => {
-    const href = b?._links?.self?.href;
-    const { bill } = await requestGet(href);
+    const bills = await getBillsSummary();
+
+    const cachedBillIndex = bills.findIndex(
+      (cb) => cb._links?.self?.href == b._links?.self?.href
+    );
+    if (bills[cachedBillIndex].line_items) {
+      return bills[cachedBillIndex];
+    }
+
+    const href = b._links?.self?.href;
+    const { bill }: { bill: Bill } = await requestGet(href);
+    bills[cachedBillIndex] = bill;
+    cache.setBills(bills);
+
     return bill;
   };
 
   const getEvents = async (): Promise<(Transaction | any)[]> => {
-    const { events } = await requestGet(state?._links.events.href ?? '');
+    const { events } = await requestGet(cache.state?._links.events.href ?? '');
     return events;
   };
 
   const getTransactions = async (): Promise<Transaction[]> => {
+    if (cache.transactions) return cache.transactions;
+
     const events = await getEvents();
-    return events.filter((e) => e?.category == 'transaction');
+    const transactions = events.filter((e) => e?.category == 'transaction');
+    cache.setTransactions(transactions);
+
+    return transactions;
+  };
+
+  const getTransaction = async (t: Transaction): Promise<Transaction> => {
+    const transactions = await getTransactions();
+
+    const cachedTransactionIndex = transactions.findIndex(
+      (cb) => cb._links?.self?.href == t._links?.self?.href
+    );
+    if (transactions[cachedTransactionIndex].card_last_four_digits) {
+      return transactions[cachedTransactionIndex];
+    }
+
+    const { transaction }: { transaction: Transaction } = await requestGet(
+      t?._links?.self?.href ?? ''
+    );
+    transactions[cachedTransactionIndex] = transaction;
+    cache.setTransactions(transactions);
+
+    return transaction;
   };
 
   return {
@@ -190,5 +296,7 @@ export const useNubank = (props?: useNubankProps) => {
     getBill,
     getEvents,
     getTransactions,
+    getTransaction,
+    getBillWithTransactionsDetails,
   };
 };

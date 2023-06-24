@@ -13,7 +13,6 @@ const BillsListPage = () => {
   React.useEffect(() => {
     getBillsSummary().then((res) => {
       const selectableBills = res
-        .reverse()
         .filter((b) => b?._links?.self?.href);
       setBills(selectableBills);
       setSelectedBillIndex(selectableBills.findIndex((b) => b.state == 'open'));

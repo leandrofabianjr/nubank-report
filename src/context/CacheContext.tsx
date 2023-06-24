@@ -1,14 +1,22 @@
 import React from 'react';
-import { AuthState } from '../hooks/useNubank';
+import { AuthState, Bill, Transaction } from '../hooks/useNubank';
 
 interface CacheContextProps {
   state?: AuthState;
   setState: (value?: AuthState) => void;
+  transactions?: Transaction[];
+  setTransactions: (value?: Transaction[]) => void;
+  bills?: Bill[];
+  setBills: (value?: Bill[]) => void;
 }
 
 export const CacheContext = React.createContext<CacheContextProps>({
   state: undefined,
   setState: () => undefined,
+  transactions: undefined,
+  setTransactions: () => undefined,
+  bills: undefined,
+  setBills: () => undefined,
 });
 
 export const CacheContextProvider = ({
@@ -32,8 +40,22 @@ export const CacheContextProvider = ({
     _setState(value);
   };
 
+  const [transactions, setTransactions] = React.useState<
+    Transaction[] | undefined
+  >();
+  const [bills, setBills] = React.useState<Bill[] | undefined>();
+
   return (
-    <CacheContext.Provider value={{ state, setState }}>
+    <CacheContext.Provider
+      value={{
+        state,
+        setState,
+        transactions,
+        setTransactions,
+        bills,
+        setBills,
+      }}
+    >
       {children}
     </CacheContext.Provider>
   );
