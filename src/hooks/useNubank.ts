@@ -118,9 +118,6 @@ interface useNubankProps {
   initLoading: boolean;
 }
 
-class RequestError extends Error {}
-class TooManyRequestsError extends RequestError {}
-
 export const useNubank = (props?: useNubankProps) => {
   const cache = useCache();
   const [loading, setLoading] = React.useState(props?.initLoading ?? true);
