@@ -1,7 +1,7 @@
 import React from 'react';
 import { CacheContext } from '../context/CacheContext';
 
-export const useAuth = () => {
+export const useCache = () => {
   const context = React.useContext(CacheContext);
 
   if (!context) {

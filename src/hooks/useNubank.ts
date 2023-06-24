@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from './useAuth';
+import { useCache } from './useCache';
 
 const DISCOVERY_URL =
   'https://prod-s0-webapp-proxy.nubank.com.br/api/discovery';
@@ -92,7 +92,7 @@ interface useNubankProps {
 }
 
 export const useNubank = (props?: useNubankProps) => {
-  const { state, setState } = useAuth();
+  const { state, setState } = useCache();
   const [loading, setLoading] = React.useState(props?.initLoading ?? true);
   const [error, setError] = React.useState();
 
