@@ -8,7 +8,7 @@ const AuthPage = () => {
   const [cpf, setCpf] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState();
-  const [authCode, setAuthCode] = React.useState(uuid.v4().toString());
+  const [authCode] = React.useState(uuid.v4().toString());
   const [qrCode, setQrCode] = React.useState<string | undefined>();
 
   React.useEffect(() => {
